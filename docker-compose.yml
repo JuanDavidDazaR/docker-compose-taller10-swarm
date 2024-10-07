@@ -1,0 +1,98 @@
+version: "3.8"
+networks:
+  stack_default:
+    driver: overlay
+
+services:
+  productoDB:
+    image: mysql:5.6
+    ports:
+      - "32000:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=mysql
+      - MYSQL_DATABASE=productoDB
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d
+    deploy:
+      placement:
+        constraints:
+          - node.ip == 192.168.100.3
+
+  usuarioDB:
+    image: mysql:5.6
+    ports:
+      - "32001:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=mysql
+      - MYSQL_DATABASE=usuarioDB
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d
+    deploy:
+      placement:
+        constraints:
+          - node.ip == 192.168.100.3
+
+  ordenDB:
+    image: mysql:5.6
+    ports:
+      - "32002:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=mysql
+      - MYSQL_DATABASE=ordenDB
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d
+    deploy:
+      placement:
+        constraints:
+          - node.ip == 192.168.100.3
+
+  usuarios:
+    image: jddaza/proyectomicro-usuarios
+    ports:
+      - "3001:3001"
+    depends_on:
+      - usuarioDB
+    deploy:
+      placement:
+        constraints:
+          - node.ip == 192.168.100.2
+
+  productos:
+    image: jddaza/proyectomicro-productos
+    ports:
+      - "3002:3002"
+    depends_on:
+      - productoDB
+    deploy:
+      placement:
+        constraints:
+          - node.ip == 192.168.100.2
+
+  ordenes:
+    image: jddaza/proyectomicro-ordenes
+    ports:
+      - "3003:3003"
+    depends_on:
+      - productoDB
+      - usuarioDB
+      - usuarios
+      - productos
+    deploy:
+      placement:
+        constraints:
+          - node.ip == 192.168.100.2
+
+  web:
+    image: jddaza/proyectomicro-web
+    ports:
+      - "8080:80"
+    depends_on:
+      - usuarios
+      - productos
+      - ordenes
+    deploy:
+      placement:
+        constraints:
+          - node.ip == 192.168.100.2
+
+
